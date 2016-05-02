@@ -14,7 +14,7 @@ if(whatversion == "?"){
       return;
       }
 
-  return HtmlService.createHtmlOutputFromFile('index')
+  return HtmlService.createHtmlOutputFromFile('S2G')
       .setSandboxMode(HtmlService.SandboxMode.IFRAME);
 
 }
