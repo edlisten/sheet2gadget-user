@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <!-- This will fix the scroolbar caused by materialze.css --> 
+  <style>[class]{will-change:unset;-webkit-backface-visibility:visible}[type=checkbox]:checked+label:before{-webkit-backface-visibility:visible;backface-visibility:visible}</style>
+  <!-- This will set the header and footer sections of this app --> 
+  <style>main {top: 0px;bottom: 26px;width: 100%} body{margin:5;width:100%;height:100%;overflow-x:hidden}footer,header{position:fixed;width:100%}header{top:0}footer{bottom:0}main{position:absolute;border-top:2px solid #F2F2F2;border-bottom:2px solid #F2F2F2;overflow:auto;overflow-x:hidden}</style>
+  
+  <style>
+  .cur_row {display: inline-block;width:100%; } 
+  </style>
+  
+  
+  
+  
+  <!-- Javascript -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
+  
+    <script>
+            $(function() {
+          google.script.run.withSuccessHandler(populateDefaults).withFailureHandler(fail).getDefaults();
+        });
+        
+        function fail(err){
+        var mainError = "Error found: "
+        console.log(err.message);
+        switch (err.message){
+          case 'Cannot call method "getSheetByName" of undefined.':
+            mainError += 'Invalid Sheet Id, please make sure the sheet Id is labeled correctly in the URL<br><a href="https://script.google.com/macros/s/AKfycbxxyQmOaza76xUwtTYR-R3Cc0tm1aZiBsFdrep94KA/dev?id=1WUNCMIbX8Em_vknkv7ixXHqC1AEpzojcLpSo6Bjx-lE">example</a>';
+            break;
+        default:
+        mainError += err.message;
+        
+        }
+        
+       
+        
+        $('#loader').hide();
+        $("#output").html(mainError);
+        $("#fail").html(err.message)
+        
+        
+        };
+        
+        function populateDefaults(defaults) {
+         var data = defaults.data;
+         var template = defaults.template;
+         
+         var rowT = template[1][0];
+         var headT = template[1][1];
+         var numOfRows = template[1][3];
+         var numOfCols = template[1][4];
+         
+         
+         
+         //template
+         $('head').append(headT);
+         var colStyle = '<style>'
+         + '#row_items {'
+         + '-webkit-column-count : '+ numOfCols + ';'
+         + '-moz-column-count : '+ numOfCols + ';'
+         + 'column-count : '+ numOfCols + ';'
+         + '}'
+         + '</style>';
+         $('head').append(colStyle);
+         
+
+         //row
+         var row_items = '<div id="row_items">';
+         for (var i = 2; i < data.length; i++) { // process row, change i to match starting row
+          var item = '<div class="cur_row">'+rowT;
+        
+          for (var j = 0; j < data[0].length; j++) { // process each tag
+           var iTag = data[0][j];
+           if (iTag == "") {break};
+           var iContent = data[i][j];
+           
+           var replaceStr = new RegExp('\\$\{\"'+iTag+'\"\}','g');
+           item = item.replace(replaceStr, iContent);
+
+          }
+          row_items += item+'</div>';
+         }
+         row_items += '</div>';
+        
+
+        // output
+         $("#output").html(row_items);
+         
+         
+         
+         pageNav(1,numOfRows,data.length-2);
+        
+         // remove loader
+         $('#loader').hide();
+        };
+        
+        
+        function pageNav(pageNumber,numPerPage,totalItems){
+        $("#pageNumber").val(pageNumber);
+        $("#numPerPage").val(numPerPage);
+        $("#totalItems").val(totalItems);
+        var numOfPages = Math.ceil(totalItems/numPerPage);
+        var goTo = (numPerPage*pageNumber);
+        var startAt = (numPerPage*pageNumber)-(numPerPage-1);
+        
+        
+        var c = 1;
+        $(".cur_row").each(function(){
+           if (c >= startAt && c <= goTo){
+                $(this).show();
+              } else {
+                $(this).hide();
+              }
+           c++
+           });
+           
+           
+           var pageNav = ""
+           + '<span>'
+           + startAt + '-' + goTo + ' /' + totalItems 
+           + '</span>'
+           + '<span class="right">'
+           + '<i id="navBack" class="material-icons" onClick="goBack()" style="cursor: pointer;">chevron_left</i> <i id="navNext" class="material-icons" onClick="goNext()" style="cursor: pointer;">chevron_right</i>'
+//           + '<i id="navBack" class="material-icons" style="cursor: pointer;">chevron_left</i> <i id="navNext" class="material-icons" style="cursor: pointer;">chevron_right</i>'  
+//           + '<button class="btn-flat"><i class="material-icons">face</i></button>'
+           + '</span>';
+           
+           
+           $("#pageNav").html(pageNav);
+           
+           if(pageNumber == 1){ $("#navBack").hide() };
+           if(pageNumber == numOfPages){ $("#navNext").hide() };
+           
+        };
+        
+        
+        function goBack() {
+        var pageNumber = Number($("#pageNumber").val());
+        var numPerPage = Number($("#numPerPage").val());
+        var totalItems = Number($("#totalItems").val());
+        pageNumber = pageNumber-1;
+        pageNav(pageNumber,numPerPage,totalItems);
+        
+//        console.log("back");
+        };
+        
+
+        function goNext() {
+        var pageNumber = Number($("#pageNumber").val());
+        var numPerPage = Number($("#numPerPage").val());
+        var totalItems = Number($("#totalItems").val());
+        pageNumber = pageNumber+1;
+        pageNav(pageNumber,numPerPage,totalItems);
+        
+//        console.log("next");
+        };
+        
+        
+        
+        
+        
+    </script>
+    
+    
+    
+    
+  </head>
+  <body>
+  
+  <header>
+  <div class="progress" id="loader"><div class="indeterminate"></div></div>
+  <input type="hidden" id="pageNumber">
+  <input type="hidden" id="numPerPage">
+  <input type="hidden" id="totalItems">
+  
+  </header>
+  
+  <main>
+  
+  <div id="output"></div>
+  <div id="pageNav"></div>
+  </main>
+   
+   <footer>
+   
+   <div id="fail"></div>
+   </footer>
+  </body>
+</html>
+
+
